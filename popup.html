@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <h1>🎾 Tennis Form AutoFiller</h1>
+    <div class="subtitle">ASU Tennis Club Registration</div>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="profile">Profile</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div id="profile-tab" class="tab-content active">
+    <form id="profile-form">
+      <div class="form-group">
+        <label for="fullName">Full Name (for form "Name" field)</label>
+        <input type="text" id="fullName" placeholder="George Badulescu" required>
+      </div>
+
+      <div class="form-group">
+        <label>Practice Days (select 2 days for 6:30-8:00pm practice)</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="practice-monday" value="Monday">
+            <label for="practice-monday">Monday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="practice-wednesday" value="Wednesday">
+            <label for="practice-wednesday">Wednesday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="practice-thursday" value="Thursday">
+            <label for="practice-thursday">Thursday</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Challenge Days (select 2 days for challenge/battle, warmed up by 6:30pm)</label>
+        <div class="checkbox-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="challenge-monday" value="Monday">
+            <label for="challenge-monday">Monday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="challenge-wednesday" value="Wednesday">
+            <label for="challenge-wednesday">Wednesday</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="challenge-thursday" value="Thursday">
+            <label for="challenge-thursday">Thursday</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="challengeType">Challenge Type</label>
+        <select id="challengeType">
+          <option value="">Select type...</option>
+          <option value="Challenge">Challenge (individual)</option>
+          <option value="Battle">Battle (team position match)</option>
+          <option value="Challenge as a team (doubles/mixed)">Challenge as a team (doubles/mixed)</option>
+          <option value="No">No challenges this week</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="challengeTarget">Individual Challenge/Battle Target</label>
+        <input type="text" id="challengeTarget" placeholder="Name of player you want to challenge or battle">
+        <small style="color: #6c757d; font-size: 11px;">Use this field if challenging or battling individually</small>
+      </div>
+
+      <div class="form-group">
+        <label for="partnerName">Team Partner Name</label>
+        <input type="text" id="partnerName" placeholder="Your partner's name for doubles/mixed">
+        <small style="color: #6c757d; font-size: 11px;">Use this field if challenging as a team (doubles/mixed)</small>
+      </div>
+
+      <button type="submit" class="button primary">Save Profile</button>
+    </form>
+  </div>
+
+  <!-- Settings Tab -->
+  <div id="settings-tab" class="tab-content">
+    <div class="toggle-group">
+      <label>Auto-Fill Forms</label>
+      <label class="toggle">
+        <input type="checkbox" id="autoFillEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-group">
+      <label>Auto-Submit Forms</label>
+      <label class="toggle">
+        <input type="checkbox" id="autoSubmitEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button id="fillFormBtn" class="button success">Fill Form Now</button>
+    <button id="testExtensionBtn" class="button secondary">Test Extension</button>
+
+    <div class="info-text">
+      <strong>Auto-Fill:</strong> Automatically fills forms when detected<br>
+      <strong>Auto-Submit:</strong> Automatically submits after filling (use with caution)<br>
+      <strong>Fill Now:</strong> Manually trigger form filling on current page
+    </div>
+
+    <div id="lastFill" class="last-fill"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
