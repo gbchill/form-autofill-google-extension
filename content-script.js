@@ -1,5 +1,5 @@
-// Tennis Form AutoFiller - Content Script (Google Forms Optimized)
-console.log('Tennis Form AutoFiller: Content script loaded');
+// Form AutoFiller - Content Script (Google Forms Optimized)
+console.log('Form AutoFiller: Content script loaded');
 
 let isFormFilled = false;
 let userProfile = null;

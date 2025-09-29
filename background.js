@@ -1,8 +1,8 @@
-// Tennis Form AutoFiller - Background Service Worker
+// Form AutoFiller - Background Service Worker
 
 chrome.runtime.onInstalled.addListener(function(details) {
   if (details.reason === 'install') {
-    console.log('Tennis Form AutoFiller installed');
+    console.log('Form AutoFiller installed');
     
     // Set default settings
     chrome.storage.sync.set({
@@ -13,7 +13,7 @@ chrome.runtime.onInstalled.addListener(function(details) {
     // Don't auto-open popup on install to avoid tab issues
     console.log('Extension installed successfully');
   } else if (details.reason === 'update') {
-    console.log('Tennis Form AutoFiller updated');
+    console.log(' Form AutoFiller updated');
   }
 });
 

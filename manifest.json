@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Tennis Form AutoFiller",
+  "name": "Form AutoFiller",
   "version": "1.0.0",
-  "description": "Automatically fills tennis club challenge match registration forms",
+  "description": "Automatically fills out Google Forms.",
   "permissions": [
     "storage",
     "activeTab"
@@ -19,7 +19,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Tennis Form AutoFiller",
+    "default_title": "Form AutoFiller",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

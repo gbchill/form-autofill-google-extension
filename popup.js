@@ -1,4 +1,4 @@
-// Tennis Form AutoFiller - Popup Script
+//Form AutoFiller - Popup Script
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize popup
   loadUserProfile();
