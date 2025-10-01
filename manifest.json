@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Form AutoFiller",
   "version": "1.0.0",
-  "description": "Automatically fills out Google Forms.",
+  "description": "Automatically fill Google Forms with saved profile info. Save time on recurring forms with auto-fill and auto-submit.",
   "permissions": [
     "storage",
     "activeTab"
