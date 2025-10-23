@@ -11,21 +11,41 @@
 
   <div id="status" class="status"></div>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="profile">Profile</div>
-    <div class="tab" data-tab="settings">Settings</div>
+  <!-- Settings at the top -->
+  <div class="settings-section">
+    <div class="toggle-group">
+      <label>Auto-Fill Forms</label>
+      <label class="toggle">
+        <input type="checkbox" id="autoFillEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-group">
+      <label>Auto-Submit Forms</label>
+      <label class="toggle">
+        <input type="checkbox" id="autoSubmitEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
   </div>
 
-  <!-- Profile Tab -->
-  <div id="profile-tab" class="tab-content active">
+  <!-- Big Fill Button -->
+  <button id="fillFormBtn" class="button success fill-now-big">Fill Form Now</button>
+
+  <!-- Profile Form -->
+  <div class="profile-section">
+    <h3>Your Profile</h3>
+    <p class="info-small">Fill this once - forms will auto-fill automatically!</p>
+
     <form id="profile-form">
       <div class="form-group">
-        <label for="fullName">Full Name (for form "Name" field)</label>
+        <label for="fullName">Full Name</label>
         <input type="text" id="fullName" placeholder="Name" required>
       </div>
 
       <div class="form-group">
-        <label>Practice Days (select 2 days for 6:30-8:00pm practice)</label>
+        <label>Practice Days</label>
         <div class="checkbox-group">
           <div class="checkbox-item">
             <input type="checkbox" id="practice-monday" value="Monday">
@@ -43,7 +63,7 @@
       </div>
 
       <div class="form-group">
-        <label>Challenge Days (select 2 days for challenge/battle)</label>
+        <label>Challenge Days</label>
         <div class="checkbox-group">
           <div class="checkbox-item">
             <input type="checkbox" id="challenge-monday" value="Monday">
@@ -87,35 +107,7 @@
     </form>
   </div>
 
-  <!-- Settings Tab -->
-  <div id="settings-tab" class="tab-content">
-    <div class="toggle-group">
-      <label>Auto-Fill Forms</label>
-      <label class="toggle">
-        <input type="checkbox" id="autoFillEnabled">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="toggle-group">
-      <label>Auto-Submit Forms</label>
-      <label class="toggle">
-        <input type="checkbox" id="autoSubmitEnabled">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <button id="fillFormBtn" class="button success">Fill Form Now</button>
-    <button id="testExtensionBtn" class="button secondary">Test Extension</button>
-
-    <div class="info-text">
-      <strong>Auto-Fill:</strong> Automatically fills forms when detected<br>
-      <strong>Auto-Submit:</strong> Automatically submits after filling (use with caution)<br>
-      <strong>Fill Now:</strong> Manually trigger form filling on current page
-    </div>
-
-    <div id="lastFill" class="last-fill"></div>
-  </div>
+  <div id="lastFill" class="last-fill"></div>
 
   <script src="popup.js"></script>
 </body>

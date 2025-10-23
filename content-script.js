@@ -1,5 +1,6 @@
 // Form AutoFiller - Content Script (Google Forms Optimized)
-console.log('Form AutoFiller: Content script loaded');
+console.log('🚀 Form AutoFiller: Content script loaded');
+console.log('📍 Current URL:', window.location.href);
 
 let isFormFilled = false;
 let userProfile = null;
@@ -7,14 +8,25 @@ let fillStartTime = null;
 
 // Get user profile immediately on script load
 chrome.storage.sync.get(['userProfile', 'autoFillEnabled'], (result) => {
+  console.log('📦 Storage result:', result);
+
   userProfile = result.userProfile;
   const autoFillEnabled = result.autoFillEnabled !== false;
-  
+
+  console.log('👤 User profile:', userProfile);
+  console.log('⚙️ Auto-fill enabled:', autoFillEnabled);
+
   if (userProfile && autoFillEnabled) {
-    console.log('Auto-fill enabled, Profile loaded:', userProfile);
+    console.log('✅ Auto-fill enabled, Profile loaded:', userProfile);
+    console.log('🔍 Initializing form watcher...');
     initializeFastFormWatcher();
   } else {
-    console.log('Auto-fill disabled or no profile');
+    if (!userProfile) {
+      console.log('⚠️ No user profile found. Please set up your profile first.');
+    }
+    if (!autoFillEnabled) {
+      console.log('⚠️ Auto-fill is disabled. Enable it in settings.');
+    }
   }
 });
 
@@ -37,22 +49,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function initializeFastFormWatcher() {
+  console.log('🎯 Form watcher initialized');
+
   // Strategy 1: Immediate check
+  console.log('⏱️ Strategy 1: Immediate check');
   detectAndFillForm();
-  
+
   // Strategy 2: DOM ready check
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', detectAndFillForm, { once: true });
+    console.log('⏱️ Strategy 2: Waiting for DOMContentLoaded');
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('✅ DOM Content Loaded, attempting fill');
+      detectAndFillForm();
+    }, { once: true });
+  } else {
+    console.log('✅ DOM already ready');
   }
-  
+
   // Strategy 3: Mutation observer for dynamic content
+  console.log('⏱️ Strategy 3: Setting up mutation observer');
   const observer = new MutationObserver(() => {
     if (!isFormFilled && getGoogleFormFields().length > 0) {
+      console.log('🔄 Mutation detected with form fields, attempting fill');
       observer.disconnect();
       detectAndFillForm();
     }
   });
-  
+
   const targetNode = document.body || document.documentElement;
   if (targetNode) {
     observer.observe(targetNode, {
@@ -60,15 +83,33 @@ function initializeFastFormWatcher() {
       subtree: true
     });
   }
-  
+
   // Strategy 4: Delayed checks for slow-loading forms
+  console.log('⏱️ Strategy 4: Setting up delayed checks');
   setTimeout(() => {
+    console.log('⏰ 1 second delay check');
     if (!isFormFilled) detectAndFillForm();
   }, 1000);
-  
+
   setTimeout(() => {
+    console.log('⏰ 2 second delay check');
     if (!isFormFilled) detectAndFillForm();
   }, 2000);
+
+  setTimeout(() => {
+    console.log('⏰ 3 second delay check');
+    if (!isFormFilled) detectAndFillForm();
+  }, 3000);
+
+  setTimeout(() => {
+    console.log('⏰ 4 second delay check');
+    if (!isFormFilled) detectAndFillForm();
+  }, 4000);
+
+  setTimeout(() => {
+    console.log('⏰ 5 second delay check (final attempt)');
+    if (!isFormFilled) detectAndFillForm();
+  }, 5000);
 }
 
 function isGoogleFormPage() {
@@ -77,18 +118,30 @@ function isGoogleFormPage() {
 }
 
 function detectAndFillForm() {
-  if (!userProfile || isFormFilled) return;
-  
+  console.log('🔍 detectAndFillForm called');
+  console.log('   - isFormFilled:', isFormFilled);
+  console.log('   - userProfile exists:', !!userProfile);
+
+  if (!userProfile) {
+    console.log('❌ No user profile, skipping fill');
+    return;
+  }
+
+  if (isFormFilled) {
+    console.log('✅ Form already filled, skipping');
+    return;
+  }
+
   fillStartTime = performance.now();
   const fields = getGoogleFormFields();
-  
-  console.log('Detect and fill - found fields:', fields.length);
-  
+
+  console.log('📋 Detect and fill - found fields:', fields.length);
+
   if (fields.length > 0) {
-    console.log('Starting form fill with profile:', userProfile);
+    console.log('🎉 Starting form fill with profile:', userProfile);
     fillGoogleFormFields(fields);
   } else {
-    console.log('No form fields detected');
+    console.log('⚠️ No form fields detected yet');
   }
 }
 
@@ -108,41 +161,67 @@ function fillFormNow() {
 // Google Forms specific field detection
 function getGoogleFormFields() {
   const fields = [];
-  
+
+  console.log('🔍 Starting field detection...');
+
   // Google Forms uses specific selectors
-  // Text inputs (Name field and others)
-  const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], textarea, input[aria-labelledby], input[data-initial-value]');
+  // Text inputs (Name field and others) - EXPANDED SELECTORS
+  const textInputSelectors = [
+    'input[type="text"]',
+    'input[type="email"]',
+    'textarea',
+    'input[aria-labelledby]',
+    'input[data-initial-value]',
+    'input.quantumWizTextinputPaperinputInput', // Google Forms specific class
+    'input.whsOnd.zHQkBf', // Another Google Forms class
+    'div[role="textbox"]', // Some forms use div with role
+    'input[jsname]' // Google Forms often use jsname attribute
+  ];
+
+  const textInputs = document.querySelectorAll(textInputSelectors.join(', '));
+  console.log(`📝 Found ${textInputs.length} potential text inputs`);
+
   textInputs.forEach((input, index) => {
-    if (input.offsetParent !== null && !input.disabled && input.type !== 'hidden') {
+    // More lenient visibility check
+    const isVisible = input.offsetParent !== null || window.getComputedStyle(input).display !== 'none';
+    const isReadOnly = input.readOnly; // Only reject read-only, NOT disabled (Google Forms uses disabled initially)
+    const isHidden = input.type === 'hidden';
+
+    console.log(`   Input ${index}: visible=${isVisible}, disabled=${input.disabled}, readonly=${isReadOnly}, hidden=${isHidden}, tagName=${input.tagName}`);
+
+    // Accept disabled inputs! Google Forms disables them until user interacts
+    if (isVisible && !isReadOnly && !isHidden) {
       const questionText = getGoogleFormQuestionText(input);
-      console.log(`Text field ${index}:`, questionText);
-      
+      console.log(`   ✅ Text field ${index} accepted:`, questionText);
+
       fields.push({
         element: input,
         type: 'text',
         questionText: questionText,
         index: index
       });
+    } else {
+      console.log(`   ❌ Text field ${index} rejected (visible=${isVisible}, readonly=${isReadOnly}, hidden=${isHidden})`);
     }
   });
   
   // Radio button groups (Challenge type)
   const radioGroups = {};
   const radios = document.querySelectorAll('div[role="radio"], div[role="radiogroup"] input[type="radio"], input[type="radio"]');
-  
+
+  console.log(`🔘 Found ${radios.length} radio buttons`);
+
   radios.forEach((radio, index) => {
     if (radio.offsetParent !== null) {
-      const questionText = getGoogleFormQuestionText(radio);
-      
-      // Better grouping - use a more specific key that focuses on the actual question
-      let groupKey = 'radio_unknown';
-      if (questionText.includes('Would you like') || questionText.includes('challenge') || questionText.includes('battle')) {
-        groupKey = 'challenge_type_question';
-      } else {
-        // Use first 30 chars as fallback
-        groupKey = questionText.substring(0, 30);
-      }
-      
+      // Find the parent question container (not the individual button label!)
+      const questionText = getParentQuestionForChoice(radio);
+
+      console.log(`   Radio ${index}: "${questionText}"`);
+
+      // Use the full question text as the grouping key
+      // This ensures all radios with the same parent question are grouped together
+      const groupKey = questionText;
+
       if (!radioGroups[groupKey]) {
         radioGroups[groupKey] = {
           elements: [],
@@ -150,13 +229,18 @@ function getGoogleFormFields() {
           questionText: questionText,
           index: Object.keys(radioGroups).length
         };
-        console.log(`Radio group ${Object.keys(radioGroups).length - 1}:`, questionText);
+        console.log(`   ✅ Created radio group ${Object.keys(radioGroups).length - 1}: "${questionText}"`);
       }
-      
+
       radioGroups[groupKey].elements.push(radio);
     }
   });
-  
+
+  console.log(`📊 Total radio groups: ${Object.keys(radioGroups).length}`);
+  Object.values(radioGroups).forEach((group, idx) => {
+    console.log(`   Group ${idx}: ${group.elements.length} buttons - "${group.questionText.substring(0, 50)}..."`);
+  });
+
   Object.values(radioGroups).forEach(group => {
     if (group.elements.length > 0) {
       fields.push(group);
@@ -166,22 +250,19 @@ function getGoogleFormFields() {
   // Checkboxes (Practice and Challenge attendance)
   const checkboxGroups = {};
   const checkboxes = document.querySelectorAll('div[role="checkbox"], input[type="checkbox"]');
-  
+
+  console.log(`☑️ Found ${checkboxes.length} checkboxes`);
+
   checkboxes.forEach((checkbox, index) => {
     if (checkbox.offsetParent !== null) {
-      const questionText = getGoogleFormQuestionText(checkbox);
-      
-      // Better grouping for checkboxes
-      let groupKey = 'checkbox_unknown';
-      if (questionText.includes('Attendance') && questionText.includes('practice')) {
-        groupKey = 'practice_attendance';
-      } else if (questionText.includes('Challenge') && questionText.includes('Attendance')) {
-        groupKey = 'challenge_attendance';
-      } else {
-        // Use first 40 chars as fallback
-        groupKey = questionText.substring(0, 40);
-      }
-      
+      // Find the parent question container (not the individual checkbox label!)
+      const questionText = getParentQuestionForChoice(checkbox);
+
+      console.log(`   Checkbox ${index}: "${questionText}"`);
+
+      // Use the full question text as the grouping key
+      const groupKey = questionText;
+
       if (!checkboxGroups[groupKey]) {
         checkboxGroups[groupKey] = {
           elements: [],
@@ -189,13 +270,18 @@ function getGoogleFormFields() {
           questionText: questionText,
           index: Object.keys(checkboxGroups).length
         };
-        console.log(`Checkbox group ${Object.keys(checkboxGroups).length - 1}:`, questionText);
+        console.log(`   ✅ Created checkbox group ${Object.keys(checkboxGroups).length - 1}: "${questionText}"`);
       }
-      
+
       checkboxGroups[groupKey].elements.push(checkbox);
     }
   });
-  
+
+  console.log(`📊 Total checkbox groups: ${Object.keys(checkboxGroups).length}`);
+  Object.values(checkboxGroups).forEach((group, idx) => {
+    console.log(`   Group ${idx}: ${group.elements.length} checkboxes - "${group.questionText.substring(0, 50)}..."`);
+  });
+
   Object.values(checkboxGroups).forEach(group => {
     if (group.elements.length > 0) {
       fields.push(group);
@@ -206,33 +292,85 @@ function getGoogleFormFields() {
   return fields;
 }
 
-// Get question text for Google Forms
-function getGoogleFormQuestionText(element) {
-  // Strategy 1: Look for actual question container going up the DOM tree
+// Get parent question for radio/checkbox elements
+// These elements have their own aria-label (the button/checkbox label)
+// but we need the PARENT QUESTION that groups them together
+function getParentQuestionForChoice(element) {
   let current = element;
-  for (let i = 0; i < 15; i++) {
+
+  // Go up the DOM tree to find the question container
+  for (let i = 0; i < 25; i++) {
     current = current.parentElement;
     if (!current) break;
-    
+
+    // Look for elements that contain the actual question text
+    // Skip the individual choice labels (Monday, Tuesday, etc.)
+    const headings = current.querySelectorAll('[role="heading"], .M7eMe, span.M7eMe, div.M7eMe');
+
+    for (const heading of headings) {
+      const text = heading.textContent.trim();
+
+      // Make sure it's a substantial question, not just a choice label
+      if (text.length > 10 && !text.match(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Yes|No|Chalenge|Battle|Challenge)$/i)) {
+        return text;
+      }
+    }
+
+    // Alternative: look for the question in data attributes or specific Google Forms classes
+    if (current.hasAttribute('data-params')) {
+      const questionContainer = current.querySelector('.freebirdFormviewerViewItemsItemItemTitle, .M7eMe');
+      if (questionContainer) {
+        const text = questionContainer.textContent.trim();
+        if (text.length > 10) {
+          return text;
+        }
+      }
+    }
+  }
+
+  // Fallback: if we can't find the parent question, return the aria-label
+  // (This shouldn't happen in normal Google Forms, but it's a safety net)
+  return element.getAttribute('aria-label') || 'Unknown Question';
+}
+
+// Get question text for Google Forms
+function getGoogleFormQuestionText(element) {
+  console.log('🔎 Getting question text for element:', element);
+
+  // Strategy 0: Check aria-label first (often has the question)
+  const ariaLabel = element.getAttribute('aria-label');
+  if (ariaLabel && ariaLabel.length > 2 && ariaLabel.length < 500) {
+    console.log('   ✅ Found via aria-label:', ariaLabel);
+    return ariaLabel;
+  }
+
+  // Strategy 1: Look for actual question container going up the DOM tree
+  let current = element;
+  for (let i = 0; i < 20; i++) { // Increased from 15 to 20
+    current = current.parentElement;
+    if (!current) break;
+
     // Look for Google Forms question containers with common class patterns
     const questionSelectors = [
       '[role="listitem"]', // Main question container
-      '.freebirdFormviewerViewItemsItemItem', 
+      '.freebirdFormviewerViewItemsItemItem',
       '.freebirdFormviewerViewItemsItemItemTitle',
       '.freebirdFormviewerViewItemsItemItemTitleContainer',
       '[data-value]',
-      '.freebirdFormviewerViewItemsItemItem'
+      '.freebirdFormviewerViewItemsItemItem',
+      '.Qr7Oae', // New Google Forms class
+      '.geS5n' // Another common class
     ];
-    
+
     for (const selector of questionSelectors) {
       const questionContainer = current.querySelector(selector);
       if (questionContainer) {
         // Look for the actual question text within this container
-        const titleElement = questionContainer.querySelector('[role="heading"], .freebirdFormviewerViewItemsItemItemTitle, h2, h3');
+        const titleElement = questionContainer.querySelector('[role="heading"], .freebirdFormviewerViewItemsItemItemTitle, .M7eMe, h2, h3, span.M7eMe');
         if (titleElement) {
           const questionText = titleElement.textContent.trim();
-          if (questionText.length > 5) {
-            console.log('Found question via title element:', questionText);
+          if (questionText.length > 2) { // Reduced from 5 to 2 to catch shorter labels like "Name"
+            console.log('   ✅ Found question via title element:', questionText);
             return questionText;
           }
         }
@@ -264,60 +402,174 @@ function getGoogleFormQuestionText(element) {
       }
     }
   }
-  
-  // Strategy 2: Look for aria-label as fallback
-  const ariaLabel = element.getAttribute('aria-label');
-  if (ariaLabel && ariaLabel.length > 3) {
-    console.log('Using aria-label:', ariaLabel);
-    return ariaLabel;
-  }
-  
-  console.log('Could not determine question text for element');
+
+  console.log('   ⚠️ Could not determine question text for element');
   return 'Unknown Question';
 }
 
-// Fill Google Forms fields
-function fillGoogleFormFields(fields) {
+// Click element with proper events to trigger Google Forms validation
+function clickElementWithEvents(element) {
+  console.log('   🖱️ Clicking with full event sequence...');
+
+  // Enable element if it's disabled (Google Forms does this)
+  const ariaDisabled = element.getAttribute('aria-disabled');
+  if (ariaDisabled === 'true') {
+    console.log('   ⚡ Removing aria-disabled...');
+    element.removeAttribute('aria-disabled');
+  }
+
+  if (element.disabled) {
+    console.log('   ⚡ Enabling disabled element...');
+    element.disabled = false;
+  }
+
+  // Get element position for realistic mouse events
+  const rect = element.getBoundingClientRect();
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+
+  // Focus first
+  element.focus();
+
+  // Mouse down
+  element.dispatchEvent(new MouseEvent('mousedown', {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    clientX: x,
+    clientY: y
+  }));
+
+  // Mouse up
+  element.dispatchEvent(new MouseEvent('mouseup', {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    clientX: x,
+    clientY: y
+  }));
+
+  // Click
+  element.dispatchEvent(new MouseEvent('click', {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    clientX: x,
+    clientY: y
+  }));
+
+  // Actual click (important for Google Forms)
+  element.click();
+
+  // Change event
+  element.dispatchEvent(new Event('change', { bubbles: true }));
+
+  // Blur
+  element.dispatchEvent(new Event('blur', { bubbles: true }));
+
+  console.log('   ✅ Click complete');
+}
+
+// Fill Google Forms fields (with delays for proper validation)
+async function fillGoogleFormFields(fields) {
   if (!userProfile) {
     console.log('No user profile available');
     return;
   }
-  
+
   let filledCount = 0;
   console.log('Starting to fill form fields...');
-  
-  fields.forEach((field, index) => {
+
+  // Fill fields with delays between each one
+  for (let index = 0; index < fields.length; index++) {
+    const field = fields[index];
     console.log(`Processing field ${index}:`, field.questionText, 'Type:', field.type);
-    
+
     const value = getValueForGoogleFormField(field);
     console.log(`Value to fill for field ${index}:`, value);
-    
+
     if (value !== null && value !== '') {
-      if (fillGoogleFormField(field, value)) {
+      if (await fillGoogleFormField(field, value)) {
         filledCount++;
         console.log(`Successfully filled field ${index}`);
       } else {
         console.log(`Failed to fill field ${index}`);
       }
+
+      // Add delay between fields to let Google Forms process validation
+      // Slower delays to prevent conflicts and ensure proper filling
+      if (index < fields.length - 1) {
+        const delay = field.type === 'checkbox' ? 300 : field.type === 'radio' ? 250 : 200;
+        console.log(`   ⏱️ Waiting ${delay}ms before next field...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     } else {
       console.log(`No value determined for field ${index}`);
     }
-  });
+  }
   
   if (filledCount > 0) {
     isFormFilled = true;
     const fillTime = performance.now() - fillStartTime;
-    console.log(`Successfully filled ${filledCount} fields in ${fillTime.toFixed(2)}ms`);
-    
+    console.log(`✅ Successfully filled ${filledCount} fields in ${fillTime.toFixed(2)}ms`);
+
     chrome.storage.sync.set({
       lastFillTime: Date.now()
     });
-    
+
+    // Show visual notification
+    showAutoFillNotification(filledCount);
+
     // Check for auto-submit
     checkAutoSubmit();
   } else {
-    console.log('No fields were filled');
+    console.log('⚠️ No fields were filled');
   }
+}
+
+// Show a visual notification that form was auto-filled
+function showAutoFillNotification(fieldCount) {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999999;
+    animation: slideIn 0.3s ease;
+  `;
+  notification.innerHTML = `✅ Form Auto-Filled! (${fieldCount} fields)`;
+
+  // Add animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(notification);
+
+  // Remove after 4 seconds
+  setTimeout(() => {
+    notification.style.transition = 'opacity 0.3s ease';
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+  }, 4000);
 }
 
 // Determine value for Google Form field
@@ -427,14 +679,14 @@ function getValueForGoogleFormField(field) {
 }
 
 // Fill specific Google Form field
-function fillGoogleFormField(field, value) {
+async function fillGoogleFormField(field, value) {
   try {
     if (field.type === 'text') {
-      return fillGoogleTextInput(field.element, value);
+      return await fillGoogleTextInput(field.element, value);
     } else if (field.type === 'radio') {
       return fillGoogleRadioGroup(field, value);
     } else if (field.type === 'checkbox') {
-      return fillGoogleCheckboxGroup(field, value);
+      return await fillGoogleCheckboxGroup(field, value);
     }
   } catch (error) {
     console.error('Error filling field:', error);
@@ -442,26 +694,67 @@ function fillGoogleFormField(field, value) {
   return false;
 }
 
-function fillGoogleTextInput(element, value) {
+async function fillGoogleTextInput(element, value) {
   if (!value) return false;
-  
-  console.log('Filling text input with:', value);
-  
-  // Focus the element
+
+  console.log('📝 Filling text input with:', value);
+  console.log('   Element type:', element.tagName, 'Role:', element.getAttribute('role'), 'Disabled:', element.disabled);
+
+  // Enable the input if it's disabled (Google Forms disables inputs initially)
+  if (element.disabled) {
+    console.log('   ⚡ Enabling disabled input...');
+    element.disabled = false;
+  }
+
+  // Handle div[role="textbox"] elements (contenteditable)
+  if (element.tagName === 'DIV' && element.getAttribute('role') === 'textbox') {
+    console.log('   Detected contenteditable div');
+    element.focus();
+    element.textContent = value;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+    element.dispatchEvent(new Event('blur', { bubbles: true }));
+    return true;
+  }
+
+  // Handle regular input/textarea elements
+  // Focus first
   element.focus();
-  
-  // Clear existing value
-  element.value = '';
-  
-  // Set new value
-  element.value = value;
-  
-  // Trigger all possible events
-  element.dispatchEvent(new Event('input', { bubbles: true }));
+
+  // Wait for focus to settle
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // Use native setter to bypass Google Forms' input handlers
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+  const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+
+  // Clear first
+  if (element.tagName === 'INPUT') {
+    nativeInputValueSetter.call(element, '');
+  } else if (element.tagName === 'TEXTAREA') {
+    nativeTextAreaValueSetter.call(element, '');
+  }
+
+  // Set the value using native setter (bypasses React/framework handlers)
+  if (element.tagName === 'INPUT') {
+    nativeInputValueSetter.call(element, value);
+  } else if (element.tagName === 'TEXTAREA') {
+    nativeTextAreaValueSetter.call(element, value);
+  }
+
+  // Trigger input event to let Google Forms know value changed
+  element.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+
+  // Wait for Google Forms to process
+  await new Promise(resolve => setTimeout(resolve, 150));
+
+  // Trigger change and blur
   element.dispatchEvent(new Event('change', { bubbles: true }));
-  element.dispatchEvent(new Event('keyup', { bubbles: true }));
-  element.dispatchEvent(new Event('blur', { bubbles: true }));
-  
+  element.dispatchEvent(new FocusEvent('blur', { bubbles: true }));
+
+  // Verify it was set
+  console.log('   ✅ Value set to:', element.value || element.textContent);
+
   return true;
 }
 
@@ -487,7 +780,7 @@ function fillGoogleRadioGroup(field, value) {
       // Exact match first
       if (ariaLower === valueLower) {
         console.log('Radio EXACT match found via aria-label:', ariaLabel);
-        radio.click();
+        clickElementWithEvents(radio);
         return true;
       }
     }
@@ -500,7 +793,7 @@ function fillGoogleRadioGroup(field, value) {
       // Exact match
       if (parentText === valueLower) {
         console.log('Radio EXACT match found via parent text:', parent.textContent.trim());
-        radio.click();
+        clickElementWithEvents(radio);
         return true;
       }
     }
@@ -516,28 +809,28 @@ function fillGoogleRadioGroup(field, value) {
       if (valueLower === 'challenge') {
         if (ariaLower === 'chalenge' || ariaLower.includes('chalenge')) {
           console.log('Radio TYPO match found! "Challenge" matches "Chalenge":', ariaLabel);
-          radio.click();
+          clickElementWithEvents(radio);
           return true;
         }
-        
+
         // Don't match "Challenge as a team" for "Challenge"
         if (ariaLower.includes('challenge') && ariaLower.includes('team')) {
           console.log('Skipping "Challenge as a team" when looking for "Challenge"');
           continue;
         }
-        
+
         // Partial match for "challenge"
         if (ariaLower.includes('challenge')) {
           console.log('Radio partial match found via aria-label:', ariaLabel);
-          radio.click();
+          clickElementWithEvents(radio);
           return true;
         }
       }
-      
+
       // For other values, do regular partial matching
       if (ariaLower.includes(valueLower)) {
         console.log('Radio partial match found via aria-label:', ariaLabel);
-        radio.click();
+        clickElementWithEvents(radio);
         return true;
       }
     }
@@ -551,18 +844,18 @@ function fillGoogleRadioGroup(field, value) {
       if (valueLower === 'challenge') {
         if (parentText.includes('chalenge')) {
           console.log('Radio TYPO match found via parent text! "Challenge" matches "Chalenge"');
-          radio.click();
+          clickElementWithEvents(radio);
           return true;
         }
-        
+
         if (parentText.includes('challenge') && parentText.includes('team')) {
           continue;
         }
       }
-      
+
       if (parentText.includes(valueLower)) {
         console.log('Radio partial match found via parent text:', parent.textContent.trim());
-        radio.click();
+        clickElementWithEvents(radio);
         return true;
       }
     }
@@ -580,9 +873,9 @@ function fillGoogleRadioGroup(field, value) {
   return false;
 }
 
-function fillGoogleCheckboxGroup(field, value) {
+async function fillGoogleCheckboxGroup(field, value) {
   console.log('Filling checkbox group, looking for:', value);
-  
+
   // Handle array of days (for attendance fields)
   if (Array.isArray(value)) {
     console.log('Processing checkbox group with multiple days:', value);
@@ -596,8 +889,21 @@ function fillGoogleCheckboxGroup(field, value) {
         const ariaLabel = checkbox.getAttribute('aria-label');
         if (ariaLabel && ariaLabel.toLowerCase().includes(dayLower)) {
           console.log('Checkbox match found for', day, ':', ariaLabel);
-          if (!checkbox.checked) {
-            checkbox.click();
+          let isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+
+          if (!isChecked) {
+            clickElementWithEvents(checkbox);
+
+            // Verify it got checked, retry if needed
+            await new Promise(resolve => setTimeout(resolve, 50));
+            isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+
+            if (!isChecked) {
+              console.log('   ⚠️ Checkbox not checked after first click, retrying...');
+              clickElementWithEvents(checkbox);
+              await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
             checkedCount++;
           }
           break; // Move to next day
@@ -617,27 +923,30 @@ function fillGoogleCheckboxGroup(field, value) {
     const ariaLabel = checkbox.getAttribute('aria-label');
     if (ariaLabel && ariaLabel.toLowerCase().includes(valueLower)) {
       console.log('Checkbox match found via aria-label:', ariaLabel);
-      if (!checkbox.checked) {
-        checkbox.click();
+      const isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+      if (!isChecked) {
+        clickElementWithEvents(checkbox);
       }
       return true;
     }
-    
+
     // Check nearby text
     const parent = checkbox.closest('[role="checkbox"]') || checkbox.parentElement;
     if (parent && parent.textContent.toLowerCase().includes(valueLower)) {
       console.log('Checkbox match found via parent text:', parent.textContent);
-      if (!checkbox.checked) {
-        checkbox.click();
+      const isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+      if (!isChecked) {
+        clickElementWithEvents(checkbox);
       }
       return true;
     }
-    
+
     // Check value attribute
     if (checkbox.value && checkbox.value.toLowerCase().includes(valueLower)) {
       console.log('Checkbox match found via value:', checkbox.value);
-      if (!checkbox.checked) {
-        checkbox.click();
+      const isChecked = checkbox.getAttribute('aria-checked') === 'true' || checkbox.checked;
+      if (!isChecked) {
+        clickElementWithEvents(checkbox);
       }
       return true;
     }
